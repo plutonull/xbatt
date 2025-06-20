@@ -1,0 +1,209 @@
+		    xbatt -- バッテリー状態表示プログラム
+							   1.0  1995/04/04
+							   1.1  1995/04/28
+							   1.2  1997/03/07
+								  衛藤敏寿
+							   eto@forus.or.jp
+						     eto@osl.fujitsu.co.jp
+
+1. xbatt とは
+
+  xbatt は FreeBSD および Linux で APM (Advanced Power Management) ド
+ライバを利用してバッテリーの状態を取得し，表示する X Window のクライア
+ントプログラムです．これを使うことにより，バッテリーの残量，AC電源の供
+給状態および充電状態を知ることができます。
+
+
+2. 利用上の注意
+
+  このプログラムを利用する場合，APM ドライバが利用できるように設定されてい
+る必要があります．
+
+2.1 FreeBSD の場合
+
+  FreeBSD の場合は標準のカーネル (GENERIC) に APM ドライバが組み込まれ
+ています．ただし，デフォルトでは /etc/sysconfig で以下のように抑止され
+ています．これを YES に変更して OS を再起動しましょう．
+
+	apm_enable=NO
+
+  なお，このオプションを変更して起動すると正常に起動できなくなる機種も
+あります．その場合の対応方法などについては以下で説明する PAO に含まれ
+るドキュメントを参照してください．
+
+  APM および PC-CARD (PCMCIA) 関連のドライバの最新版は PAO という名前
+で慶應大学の細川さんからリリースされています．これは以下の WWW サーバー
+で公開されているので，そちらを参照してください．
+
+	http://www.jp.freebsd.org/PAO/
+
+  APM ドライバが正常に動作しているかどうかは、apm コマンドを使用して以
+下のようにバッテリー残量を参照することで確認できます．これが正常に動作
+しない場合は xbatt も動作しません．
+
+	% apm
+	APM version: 1.0
+	AC Line status: off-line
+	Battery status: high
+	Remaining battery life: 50%
+
+※注意※
+  IBM ThinkPad230Cs YB5 や YB7 をお使いの方でバッテリーの残量が表示されな
+い場合、NIFTY-Serve の FIBMFEEL フォーラムで IBM より提供されている BIOS 
+のバージョンアップのパッチを利用することにより、状態が取得できるようになる
+かもしれません。少なくとも作者はそのパッチで問題ありませんでしたが、パッチ
+の適用は個人の責任範囲で行なってください。
+
+
+2.2 Linux の場合
+
+  LinuxではカーネルのバージョンによりAPMドライバが組み込まれているもの
+と，そうでないものがあります．カーネルのバージョンごとの対応方法は以下
+のようになります．
+
+	1.3.46 より前のカーネル
+		APMドライバが組み込まれていないので，apm-biosと呼ばれる
+		ドライバを組み込む必要があります．
+
+	1.3.46 以降のカーネル
+		標準で APM ドライバが組み込まれていますのでとくにパッ
+		チは必要ありません．
+
+	なお，1.3.x 系のカーネルは develop release であるため，より安
+	定したバージョンである 2.0.x へ移行することが推奨されています．
+
+現在利用しているカーネルで APM ドライバが有効になっているかどうかは，
+ls コマンドなどにより /proc/apm というファイルが見えるか確認してください．
+
+存在しない場合はカーネルの再構築を行なう必要があります．
+
+APM ドライバを有効にするには，make config で Character device
+configuration で以下のように答えて APM ドライバを有効にします．
+
+	Advanced Power Management BIOS support (CONFIG_APM) [n] y
+
+なお，Linux での APM 関係に関しては以下のURLが参考になるでしょう．
+
+	http://www.cs.utexas.edu/users/kharker/linux-laptop/apm.html
+
+
+APM ドライバが正常に動作しているかは，次のようにして /proc/apm の出力
+を確認します．
+
+    - Linux 1.3.46 より前 + apm-bios の場合
+	% cat /proc/apm 
+	BIOS version: 1.0
+	Flags: 0x03
+	Entry e800:5f80 cseg16 e800 dseg 3c00
+	AC: on line
+	Battery status: high
+	Battery life: 93%
+
+    - Linux 1.3.46 以降の場合
+	% cat /proc/apm 
+	1.2 1.0 0x03 0x01 0x00 0xff 25% -1 ?
+
+
+3. インストール
+
+  インストールは通常の X Window アプリケーションと同様に
+
+	xmkmf; make; make install
+
+で行なえます．ただしコンパイルには xpm library が必要です．
+
+  FreeBSD ではパッケージとして xpm-3.4*.tgz が用意されていますので，
+これを入手して pkg_add すると良いでしょう．
+
+
+4. 利用方法
+
+  デフォルトでは 30秒に一回状態を更新します．また，マウスカーソルを電
+池アイコンの上に持っていくとその時点での最新の情報を取得するとともに，
+（もしBIOSがサポートしていれば）1%単位でバッテリーの残量を表示します．
+
+  なお，デフォルトの更新時間をを変更するときは ，実行時に
+-timerInterval オプションで更新間隔を秒単位で指定するか，Imakefile で
+指定しているマクロ UPDATE_INTERVAL の値を変更し再コンパイルしてください．
+
+  PC を Resume した後にバッテリー状態が更新されなくなることがたまにあ
+るようです．このような場合は一度マウスカーソルを電池の上に持っていって
+みてください．こうすることで状態更新用のタイマーがリセットされるはずです．
+
+  fvwmを利用している場合以下の行を .fvwmrc に追加することにより，画面の最
+前面に固定しタイトルバーをつけずに表示することができます．
+
+	Style "xbatt" NoTitle,Sticky,StaysOnTop,WindowListSkip,CirculateSkip
+
+  また FvwmButtons を使用している方は，以下のような行を追加することで，
+ボタンの中で xbatt を動かすことができます．
+
+	*FvwmButtons(Title xbatt, Swallow(UseOld) "xbatt" \
+		'Exec /usr/local/bin/xbatt &')
+
+
+5. 謝辞
+
+  このプログラムを作成するにあたり以下の方々のお世話になりました．どう
+もありがとうございます．
+
+    for FreeBSD support
+	Tatsumi Hosokawa (hosokawa@jp.FreeBSD.org)
+	Noriyuki Takahashi (nor@aecl.ntt.jp)
+	Hajimu UMEMOTO (ume@iabs.hitachi.co.jp)
+	Kouki Higuchi <luke@fct.kgc.co.jp>
+	EGUCHI Osamu <eguchi@shizuokanet.or.jp>
+	and BSD-Nomads mailing list member
+
+    for Linux support
+	Koyama Tadayoshi (pcs00294@asciinet.or.jp)
+	Hisamatsu Hiroshi (hisama@pfu.co.jp)
+	Shoichi NAKAYAMA (naka@fadev.fvd.fujitsu.co.jp)
+	Yoshihito Yamagami (yoshi@funival.mfd.cs.fujitsu.co.jp)
+	Masahide NODA (mac@pssys.flab.fujitsu.co.jp)
+	M Ishigaki <mi@sy.ssl.fujitsu.co.jp>
+	Kunihiko IMAI <imai@musen.ts.fujitsu.co.jp>
+	Toshio Fujishiro <fjsr@s4w021.ss.ts.fujitsu.co.jp>
+
+
+6. 連絡先
+
+  御意見・御要望などは eto@osl.fujitsu.co.jp または eto@forus.or.jp ま
+でお願いします．
+
+
+  本バージョンでの動作確認ができたと連絡があった機種およびOSの組合せは
+以下のものです．
+
+    <<<FreeBSD>>>
+	DEC High-Note Ultra2	2.1.5-RELEASE	PAO-960831
+	DEC High-Note Ultra2	2.2-960801-SNAP	PAO-961002(*2)
+	DEC High-Note Ultra2	2.2-SNAP-960801	PAO-961002
+	IBM ThinkPad 230Cs(FBW)	2.2-ALPHA	PAO-961215
+	IBM ThinkPad 230Cs(YB7)	2.1.5-RELEASE	PAO-960831
+	IBM ThinkPad 530Cs	2.2-ALPHA	PAO-961215(*1)
+	IBM ThinkPad 535	2.2-BETA	PAO-961215
+	IBM ThinkPad 560	2.2-961014-SNAP	PAO-961020
+	IBM Thinkpad 535	2.2-970205-GAMMAPAO-970210
+	Panasonic JETmini CF-11	2.1.0-RELEASE	pccard-test-960207
+	Panasonic JETmini CF-11	2.1.5-RELEASE	PAO-960831
+	SOTEC WinBookBird133G/S	2.2-970205-GAMMA
+	Sharp Mebius (PC-A354)	2.2-960801-SNAP	PAO-961002
+	Sharp Mebius (PC-A455)	2.1.5-RELEASE	PAO-960831
+	Toshiba Dynabook SSR575	2.2-970225-GAMMAPAO-970210
+	Toshiba PORTAGE 620	2.2-ALPHA	PAO-961215
+	Toshiba PORTEGE 620	2.2-970205-GAMMAPAO-970210
+	Toshiba PORTEGE 620CT	2.2-BETA	PAO-961215
+	Toshiba Satellite 110CS	2.2-961014-SNAP	PAO-961020
+		*1 TP530はバッテリー残量が取得できないためごまかしている
+		*2 CTS5100 BIOS ver2.10
+
+    <<<Linux>>>
+	Fujitsu FMV-475NL/S	Linux-1.2.8 + apm-bios-0.5
+	Fujitsu FMV-475NL/S	Linux-2.0.27
+	Fujitsu FMV-475NL/T	Linux-2.0.22
+	SOTEC WinBook Bird 100	Linux-2.0.23
+	TOSHIBA Libretto20	Linux-2.0.27
+	TOSHIBA Libretto50	Linux-2.0.27
+
+<END-OF-FILE>

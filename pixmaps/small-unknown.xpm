@@ -1,0 +1,40 @@
+/* XPM */
+/*
+ *	Copyright (C) 1995 Noriyuki TAKAHASHI
+ *
+ *	unknown.xpm: battery pixmap for xbatt
+ *		Noriyuki TAKAHASHI (nor@aecl.ntt.jp), 95/04/01.
+ *	small_unknown_xpm: derived from unknown.xpm
+ *		Takeshi OHASHI (ohashi@ai.kyutech.ac.jp), 1997/03/18.
+ */
+static char * small_ubatt_xpm[] = {
+"16 16 13 1",
+" 	s None c None",
+".	c black",
+",	c white",
+"#	c black s scale g black",
+"X	c darkslategray g black m white",
+"o	c lightgrey g gray m black",
+"+	c black s plug",
+"g	c darkslategray s plug g black m white",
+"=	c lightgrey s plug g gray m black",
+"O	c yellow s plug g white m white",
+"-	c black s spark",
+"s	c yellow s spark g white m white",
+"?	c red s unknown",
+"    s    XXX    ",
+"  ss- XXXoooXXX ",
+" ss- XoooXXXoooX",
+"ss-  XXXoooooXXX",
+" sss X,,XXXXX,,X",
+"  ss-X,,?????,#X",
+" ss- X,??,,,??,X",
+"s--  X,??,,,??#X",
+"-    X,,,,,??,,X",
+" O O X,,,,??,,#X",
+" O O X,,,,??,,,X",
+"=====X,,,,,,,,#X",
+"=====X,,,,??,,,X",
+" ===+X,,,,??,,#X",
+"  =+ XXX,,,,,XXX",
+"==g    XXXXXXX  "};

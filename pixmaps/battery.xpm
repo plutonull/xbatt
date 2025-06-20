@@ -1,0 +1,73 @@
+/* XPM */
+/*
+ *	Copyright (C) 1995 Noriyuki TAKAHASHI
+ *
+ *	battery.xpm: battery pixmap for xbatt
+ *		Noriyuki TAKAHASHI (nor@aecl.ntt.jp), 1995/04/01.
+ *      modified by
+ *		Takeshi OHASHI (ohashi@ai.kyutech.ac.jp), 1997/03/18.
+ *
+ *	$Id: battery.xpm,v 1.2 1998/09/11 15:38:12 eto Exp eto $
+ */
+static char * batt_xpm[] = {
+"39 39 21 1",
+" 	s None c None",
+".	c black",
+"#	c black s scale g black",
+"X	c darkslategray g black m white",
+"o	c lightgrey g gray m black",
+"+	c black s plug",
+"g	c darkslategray s plug g black m white",
+"=	c lightgrey s plug g gray m black",
+"O	c yellow s plug g white m white",
+"-	c black s spark",
+"s	c yellow s spark g white m white",
+"1	c white s gage1",	/* gray 60 in gray */
+"2	c white s gage2",
+"3	c white s gage3",
+"4	c white s gage4",
+"5	c white s gage5",
+"6	c white s gage6",
+"7	c white s gage7",
+"8	c white s gage8",
+"9	c white s gage9",
+"@	c white s gage10",
+"                     .......           ",
+"              ........XXXXX........    ",
+"       -   ....XXXXXXXoooooXXXXXXX.... ",
+"      -s- ..XXXXoooooXooooXXoooooXXXX..",
+"     -ss- .XXooooooooXooXXXXoooooXXXXX.",
+"    -ss-  .XXXXXooooooXXXXXooooXXXXXXX.",
+"   -sss-  .XX@@XXXXXXXoooooXXXXXXX@@XX.",
+"  -sss-   .XX@@@@@@@@XXXXXXX@@@@@@@@XX.",
+" -ssss-   .XX99@@@@@@@@@@@@@@@@@@@99XX.",
+"  -ss-    .XX9999999@@@@@@@@@999###9XX.",
+"   -ss-   .XX99999999999999999999999XX.",
+"  -ssss-  .XX88999999999999999999988XX.",
+"  -sss-   .XX8888888999999999888###8XX.",
+" -sss-    .XX88888888888888888888888XX.",
+" -ss-     .XX77888888888888888888777XX.",
+"-ss-      .XX7777777888888888777###7XX.",
+"-s-       .XX77777777777777777777777XX.",
+" -        .XX66777777777777777777766XX.",
+"          .XX6666666777777777666###6XX.",
+" +++  +++ .XX66666666666666666666666XX.",
+" +O+  +O+ .XX55666666666666666666655XX.",
+" +O+  +O+ .XX55555556666666665#####5XX.",
+" +O+  +O+ .XX55555555555555555555555XX.",
+"++O++++O++.XX44555555555555555555544XX.",
+"+========+.XX4444444555555555444###4XX.",
+"+========+.XX44444444444444444444444XX.",
+"+==gggg==+.XX33444444444444444444433XX.",
+"+========+.XX3333333444444444333###3XX.",
+"+==gggg==+.XX33333333333333333333333XX.",
+"+========+.XX22333333333333333333322XX.",
+"++======++.XX2222222333333333222###2XX.",
+" ++====++ .XX22222222222222222222222XX.",
+"  +gggg+  .XX11222222222222222222211XX.",
+"  ++==+   .XX1111111222222222111###1XX.",
+"   +==+   ..XXX1111111111111111111XXX..",
+"  ++==+    ..XXXXXXX111111111XXXXXXX.. ",
+" ++===+     ...XXXXXXXXXXXXXXXXXXX...  ",
+" +===++       ......XXXXXXXXX......    ",
+" +++++             ...........         "};

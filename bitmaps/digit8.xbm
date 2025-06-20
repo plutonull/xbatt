@@ -1,0 +1,4 @@
+#define digit8_width 3
+#define digit8_height 5
+static unsigned char digit8_bits[] = {
+   0x07, 0x05, 0x07, 0x05, 0x07};

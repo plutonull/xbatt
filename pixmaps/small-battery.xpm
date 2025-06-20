@@ -1,0 +1,48 @@
+/* XPM */
+/*
+ *	Copyright (C) 1995 Noriyuki TAKAHASHI
+ *
+ *	battery.xpm: battery pixmap for xbatt
+ *		Noriyuki TAKAHASHI (nor@aecl.ntt.jp), 95/04/01.
+ *	small_batt_xpm: derived from battery.xpm
+ *		Takeshi OHASHI (ohashi@ai.kyutech.ac.jp), 1997/03/18.
+ */
+static char * small_batt_xpm[] = {
+"16 16 21 1",
+" 	s None c None",
+".	c black",
+"#	c black s scale g black",
+"X	c darkslategray g black m white",
+"o	c lightgrey g gray m black",
+"+	c black s plug",
+"g	c darkslategray s plug g black m white",
+"=	c lightgrey s plug g gray m black",
+"O	c yellow s plug g white m white",
+"-	c black s spark",
+"s	c yellow s spark g white m white",
+"1	c white s gage1",	/* gray 60 in gray */
+"2	c white s gage2",
+"3	c white s gage3",
+"4	c white s gage4",
+"5	c white s gage5",
+"6	c white s gage6",
+"7	c white s gage7",
+"8	c white s gage8",
+"9	c white s gage9",
+"@	c white s gage10",
+"    s    XXX    ",
+"  ss- XXXoooXXX ",
+" ss- XoooXXXoooX",
+"ss-  XXXoooooXXX",
+" sss X@@XXXXX@@X",
+"  ss-X99@@@@@9#X",
+" ss- X889999988X",
+"s--  X77888887#X",
+"-    X667777766X",
+" O O X55666665#X",
+" O O X445555544X",
+"=====X33444443#X",
+"=====X223333322X",
+" ===+X11222221#X",
+"  =+ XXX11111XXX",
+"==g    XXXXXXX  "};
