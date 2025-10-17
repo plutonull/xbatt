@@ -5,6 +5,7 @@
 							      Tohihisa Eto
 							   eto@forus.or.jp
 						     eto@osl.fujitsu.co.jp
+Note: this program currently does not work on FreeBSD
 
 1. WHAT IS XBATT? 
 
@@ -16,98 +17,8 @@ status.
 
 2. SYSTEM REQUIREMENT
 
-  xbatt acquires the battery status via the APM driver.
-  These instructions show how to configure the APM driver.
-
-2.1 FreeBSD
-
- In FreeBSD, the default kernel (GENERIC) contains APM driver.
-However, it is disabled by default.  To enable the APM driver find
-following line in /etc/rc.conf
-
-	apm_enable="NO"		# Set to YES if you want APM enabled.
-
- and change NO to YES then reboot.
-
-  In some environments, this driver may not work correctly.  If your
-PC does not work with APM driver, please refer to the documentation
-that came with the PAO package.
-
-  The latest APM and PC-CARD (PCMCIA) related driver is released as
-PAO package which was written by HOSOKAWA Tatsumi(hosokawa@jp.freebsd.org).
-You can find latest information in following URL:
-
-	http://www.jp.freebsd.org/PAO/
-
-  You can check the configuration by executing 'apm' commands, e.g.:
-
-	% apm
-	APM version: 1.0
-	AC Line status: off-line
-	Battery status: high
-	Remaining battery life: 50%
-
-  Even with properly configured APM driver, on some hardware equiped
-with older system BIOS or APM bios, 'apm' does not return 'Remaining
-battery life'. If this happens, xbatt will not work on your system.
-
-For users of IBM ThinkPad230Cs YB5 or YB7: 
-  If your ThinkPad doesn't display a remaining battery, the BIOS
-update kit (from IBM, found in FIBMFEEL forum of NIFTY-Serve, for
-example) may help you.  BUT DO AT YOUR OWN RISK.
-
-
-2.2 Linux
-
- Early versions of the Linux kernel do not contain the APM driver.
-
-	before 1.3.46
-		The kernel does not contain APM driver.  You have to
-		get apm-bios driver.
-
-	1.3.46 or later
-		These kernels include thr APM driver.  So you don't need to
-		install any optional drivers.
-
-	Note:	The kernel-1.3.x is a development release, so you
-		should change your kernel to 2.0.x.
-
-
-  If the APM driver is enabled in your environment, you can find the
-file entry /proc/apm.  If the file does not exist you will need to
-reconfigure your kernel.
-
-
-  To enable the APM driver in your kernel, you have to run:
-
-	make config
-
-then, answer following question in "Character device configuration" as
-follows:
-
-	Advanced Power Management BIOS support (CONFIG_APM) [n] y
-
-
-  You can find APM related information in following URL:
-
-	http://www.cs.utexas.edu/users/kharker/linux-laptop/apm.html
-
-
-  You can check the configuration by following commands, e.g.:
-
-    - before 1.3.46 + apm-bios
-	% cat /proc/apm 
-	BIOS version: 1.0
-	Flags: 0x03
-	Entry e800:5f80 cseg16 e800 dseg 3c00
-	AC: on line
-	Battery status: high
-	Battery life: 93%
-
-    - 1.3.46 or later
-	% cat /proc/apm 
-	1.2 1.0 0x03 0x01 0x00 0xff 25% -1 ?
-
+  xbatt acquires the battery status via the ACPI driver.
+  The ACPI driver should be already configured on your Linux system, if it is not, you will have to load the correct driver module, consult your distribution's documentation for more information.
 
 3. INSTALLATION
 
@@ -173,42 +84,7 @@ following people:
 
 6. QUESTIONS?  
 
-  Comments, bug-reports, and patches are welcome.  Try sending a mail
-to eto@forus.or.jp or eto@osl.fujitsu.co.jp .
+  Comments, bug-reports, and patches are welcome. The original author can be reached at eto@forus.or.jp or eto@osl.fujitsu.co.jp, however questions regarding the ACPI interface should not be directed to them.
 
-
-  Following list shows PC and OS configuration on which xbatt is
- reported to work.
-
-    <<<FreeBSD>>>
-	DEC High-Note Ultra2	2.1.5-RELEASE	PAO-960831
-	DEC High-Note Ultra2	2.2-960801-SNAP	PAO-961002(*2)
-	DEC High-Note Ultra2	2.2-SNAP-960801	PAO-961002
-	IBM ThinkPad 230Cs(FBW)	2.2-ALPHA	PAO-961215
-	IBM ThinkPad 230Cs(YB7)	2.1.5-RELEASE	PAO-960831
-	IBM ThinkPad 530Cs	2.2-ALPHA	PAO-961215(*1)
-	IBM ThinkPad 535	2.2-BETA	PAO-961215
-	IBM ThinkPad 560	2.2-961014-SNAP	PAO-961020
-	IBM Thinkpad 535	2.2-970205-GAMMAPAO-970210
-	Panasonic JETmini CF-11	2.1.0-RELEASE	pccard-test-960207
-	Panasonic JETmini CF-11	2.1.5-RELEASE	PAO-960831
-	SOTEC WinBookBird133G/S	2.2-970205-GAMMA
-	Sharp Mebius (PC-A354)	2.2-960801-SNAP	PAO-961002
-	Sharp Mebius (PC-A455)	2.1.5-RELEASE	PAO-960831
-	Toshiba Dynabook SSR575	2.2-970225-GAMMAPAO-970210
-	Toshiba PORTAGE 620	2.2-ALPHA	PAO-961215
-	Toshiba PORTEGE 620	2.2-970205-GAMMAPAO-970210
-	Toshiba PORTEGE 620CT	2.2-BETA	PAO-961215
-	Toshiba Satellite 110CS	2.2-961014-SNAP	PAO-961020
-		*1 Cannot get correct battery life in TP530
-		*2 CTS5100 BIOS ver2.10
-
-    <<<Linux>>>
-	Fujitsu FMV-475NL/S	Linux-1.2.8 + apm-bios-0.5
-	Fujitsu FMV-475NL/S	Linux-2.0.27
-	Fujitsu FMV-475NL/T	Linux-2.0.22
-	SOTEC WinBook Bird 100	Linux-2.0.23
-	TOSHIBA Libretto20	Linux-2.0.27
-	TOSHIBA Libretto50	Linux-2.0.27
 
 <END-OF-FILE>

@@ -1,0 +1,5 @@
+Makefile
+Makefile.bak
+xbatt
+xbatt._man
+*.o
