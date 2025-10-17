@@ -54,8 +54,12 @@
  *				 & mrt@mickey.ai.kyutech.ac.jp
  *			WindowMaker Dock (-withdrawn) patch
  *				by Takao KAWAMURA (kawamura@debian.or.jp)
+ *	25/08/06  1.4	Linux ACPI Support
+ *			Geometry Fixes (Battery Displaying as Grey Outline)
+ *				by Allon Lubitch (allon.lub@gmail.com)
  */
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
 #include <time.h>
@@ -66,22 +70,13 @@
 #include <X11/Shell.h>
 #include <X11/extensions/shape.h>
 #include <X11/Xaw/Cardinals.h>
-
+#include <unistd.h>
 #include <X11/xpm.h>
 
 #ifdef XKB
 # include <X11/extensions/XKBbells.h>
 #endif
 
-#ifdef __FreeBSD__
-# include <machine/apm_bios.h>
-# define APMDEV21	"/dev/apm0"
-# define APMDEV22	"/dev/apm"
-#endif
-
-#ifdef __NetBSD__
-# include <machine/apmvar.h>
-#endif
 
 
 #include "pixmaps/battery.xpm"
@@ -109,6 +104,9 @@
 #  define UPDATE_INTERVAL	5
 # endif
 #endif
+
+#define BATT_HIGH               75
+#define BATT_CRITICAL           25
 
 #define	APM_STAT_UNKNOWN	255
 /* aip->ai_acline */
@@ -216,13 +214,13 @@ struct Digits	digits[] = {
     {digit9_width, digit9_height, digit9_bits}
 };
 
-String fallback_resouces[] = {
+ String fallback_resouces[] = {
     "*width: 39",
     "*height: 39",
     NULL
 };
 
-main(
+int main(
   int	argc,
   char	*argv[]
 ) {
@@ -233,24 +231,6 @@ main(
     String	geom;
     XtAppContext appContext;
     Boolean	withdrawn = False;
-
-#if !defined(NOAPM) && defined(__FreeBSD__)
-    /* initialize APM Interface */
-    if ((apmfd = open(APMDEV21, O_RDWR)) == -1) {
-	if ((apmfd = open(APMDEV22, O_RDWR)) == -1) {
- 	    fprintf(stderr, "xbatt: cannot open apm device (%s or %s): %s\n",
-        		APMDEV21, APMDEV22, strerror(errno));
-	    exit(1);
-	}
-    }
-#endif
-
-#ifdef __NetBSD__
-    if ((apmfd = open("/dev/apm", O_RDONLY, 0755)) == -1) {
-	perror("xbatt(open device):");
-	exit(1);
-    }
-#endif
 
     /* start X-Window session */
     XtSetLanguageProc( NULL, NULL, NULL );
@@ -304,7 +284,6 @@ main(
 		  XtNheight, &windowHeight,
 		  XtNgeometry, &geom,
 		  NULL);
-
     size_hints.flags = 0;
     if (geom) {
 	int x, y;
@@ -374,7 +353,7 @@ main(
     /* set hint information */
     XSetWMNormalHints(XtDisplay(toplevel), XtWindow(toplevel),
                       &size_hints);
-
+		      
     /* display current battery status, and set timer callback */
     updateStatus(NULL, NULL);
 
@@ -424,7 +403,8 @@ void updateStatus(
 
 	forceRedraw = 0;
     }
-
+    
+    updateWindow(s);
     /* start timer for next interval */
     timer = XtAppAddTimeOut(XtWidgetToApplicationContext(toplevel),
 			    appResources.timerInterval * 1000,
@@ -438,89 +418,73 @@ struct status getBatteryStatus()
 {
     struct status	ret;
 #ifdef	__FreeBSD__
-    struct apm_info	info;
-
+/* FreeBSD Code needs to be re-written for ACPI */    
 #ifndef NOAPM
-    /* get APM information */
-    if (ioctl(apmfd, APMIO_GETINFO, &info) == -1) {
-	fprintf(stderr, "xbatt: ioctl APMIO_GETINFO failed\n");
-	exit(1);
-    }
+    
 #else	/* NOAPM */
-    /* set dummy battery life */
-    if ((lastStat.remain < 1) || (lastStat.remain > 10)) {
-	info.ai_batt_life = 100;
-    } else {
-	info.ai_batt_life = (lastStat.remain - 1) * 10;
-    }
+    
 #endif	/* NOAPM */
 
-    /* get current status */
-    if (info.ai_batt_life == APM_STAT_UNKNOWN) {
-	switch (info.ai_batt_stat) {
-	  case APM_STAT_BATT_HIGH:
-	    ret.remain = 100;
-	    break;
-	  case APM_STAT_BATT_LOW:
-	    ret.remain = 40;
-	    break;
-	  case APM_STAT_BATT_CRITICAL:
-	    ret.remain = 10;
-	    break;
-	  default:        /* expected to be APM_STAT_UNKNOWN */
-	    ret.remain = APM_STAT_UNKNOWN;
-	}
-    } else if (info.ai_batt_life > 100) {
-	/* some APM BIOSes return values slightly > 100 */
-	ret.remain = 100;
-    } else {
-	ret.remain = info.ai_batt_life;
-    }
-
-    /* get AC-line status */
-    if (info.ai_acline == APM_STAT_LINE_ON) {
-	ret.acline = APM_STAT_LINE_ON;
-    } else {
-	ret.acline = APM_STAT_LINE_OFF;
-    }
-
-    /* get charging status */
-    if (info.ai_batt_stat == APM_STAT_BATT_CHARGING) {
-	ret.charge = APM_STAT_BATT_CHARGING;
-    } else {
-	ret.charge = APM_STAT_BATT_HIGH;	/* I only want to know,	*/
-						/* chrging or not.	*/
-    }
 #endif	/* FreeBSD */
 
 #ifdef __NetBSD__
-    struct apm_power_info info;
-    if( ioctl(apmfd, APM_IOC_GETPOWER, &info) == -1 ) {
-	fprintf(stderr, "xbatt: ioctl APM_IOC_GETPOWER failed\n");
-	exit(1);
-    }
-    ret.remain = info.battery_life;
-    ret.acline = info.ac_state;
-    ret.charge = info.battery_state;
+	/* NetBSD Code also needs to be re-written for ACPI */
 #endif /* __NetBSD__ */
 
-#ifdef	__linux__
+#ifdef	linux
     char	buffer[64];
+    char	acstat;
+    FILE*       acfp;
     FILE*	fp;
     int		battLife;
-     char	driver_version[64];
-     int		apm_bios_info_major;
-     int		apm_bios_info_minor;
-     int		apm_bios_info_flags;
-     int		ac_line_status;
-     int		battery_status;
-     int		battery_flag;
-     int		time_units;
-     char	units[64];
 
-    /* open power status */
+    /* set fallbacks */
+    ret.charge = APM_STAT_BATT_HIGH;
+    ret.acline = APM_STAT_LINE_OFF;
+    /* open AC line status */
+    if ((acfp = fopen("/sys/class/power_supply/AC/online", "r")) == NULL){
+    	fprintf(stderr, "xbatt: cannot open /sys/class/power_supply/AC/online\n");
+	exit(1);
+    }
+    while ((acstat=fgetc(acfp))!=EOF){
+    	if(acstat=='1'){
+		ret.acline = APM_STAT_LINE_ON;
+	}
+
+    }
+
+    if((fp = fopen("/sys/class/power_supply/BAT0/capacity", "r")) == NULL){
+    	fprintf(stderr, "xbatt: cannot open /sys/class/power_supply/BAT0/capacity");
+    	exit(1);
+    }
+    while((fgets(buffer,5,fp)) != NULL){
+    	battLife=atoi(buffer);
+	if(battLife < 0){
+		ret.remain = APM_STAT_UNKNOWN;
+	} else {
+		ret.remain = battLife;
+	}
+    }
+    fclose(fp);
+     
+    if((fp = fopen("/sys/class/power_supply/BAT0/status", "r")) == NULL){
+    	fprintf(stderr, "xbatt: cannot open /sys/class/power_supply/BAT0/status");
+    	exit(1);
+    }
+    while((fgets(buffer,15,fp)) != NULL){
+	if(strcmp(buffer, "Charging") == 0){
+		ret.charge = APM_STAT_BATT_CHARGING;
+	} else if (battLife > BATT_HIGH){
+		ret.charge = APM_STAT_BATT_HIGH;
+	} else if (battLife < BATT_CRITICAL) {
+		ret.charge = APM_STAT_BATT_CRITICAL;
+	} else {
+		ret.charge = APM_STAT_BATT_LOW;
+	}
+    }
+    /* open power status
     if ((fp = fopen("/proc/apm", "r")) == NULL) {
-	fprintf(stderr, "xbatt: cannot optn /proc/apm\n");
+	fprintf(stderr, "xbatt: cannot optn /sys/class/power_supply/BAT0/uevent\n");
 	exit(1);
     }
 
@@ -529,7 +493,7 @@ struct status getBatteryStatus()
     while (fgets(buffer, 64, fp) != NULL) {
 	/*
 	 * for linux-1.3.58 or later
-	 */
+	 
 	if (sscanf(buffer, "%s %d.%d 0x%x 0x%x 0x%x 0x%x %d%% %d %s\n",
 		driver_version,
 		&apm_bios_info_major,
@@ -555,7 +519,7 @@ struct status getBatteryStatus()
 	}
 	/*
 	 * for apm_bios-0.5
-	 */
+	 
 	else if (sscanf(buffer, "Battery life: %d%%\n", &battLife) == 1) {
 	    ret.remain = battLife;
 	} else if (strcmp("AC: on line\n", buffer)==0) {
@@ -564,7 +528,8 @@ struct status getBatteryStatus()
 	    ret.charge = APM_STAT_BATT_CHARGING;
 	}
     }
-    fclose(fp);
+    fclose(fp);*/
+    fclose(acfp);
 #endif	/* Linux */
 
     return ret;
@@ -604,6 +569,7 @@ void updateWindow(struct status s)
     /* set color symbol for current status */
     setColorSymbol(s.remain, s.acline, s.charge);
 
+    /*removed for no borderlessness*/
     /* set color_class flag */
     if (displayType == Mono) {
 	attr.valuemask |= XpmColorKey;
@@ -656,11 +622,12 @@ void updateWindow(struct status s)
 	break;
     }
 
-    xpadding = (windowWidth - attr.width) / 2;
-    ypadding = (windowHeight - attr.width) / 2;
+    
+    //xpadding = ((windowWidth - attr.width) / 2);
+    //ypadding = ((windowHeight - attr.height) / 2);
 
     /* resize window size to pixmap size */
-    XtResizeWidget(toplevel, windowWidth, windowHeight, 1);
+    XtResizeWidget(toplevel, attr.width,attr.height, 0);
 
     /* if show status is active, then draw status info */
     if ((showStatus != 0) && (s.remain != APM_STAT_UNKNOWN)) {
@@ -773,30 +740,30 @@ void updateWindow(struct status s)
     }
 
     /* make padded pixmap */ 
-    xpmDataPadded = XCreatePixmap(XtDisplay(toplevel), XtWindow(toplevel),
+ /*   xpmDataPadded = XCreatePixmap(XtDisplay(toplevel), XtWindow(toplevel),
 				  windowWidth,
 				  windowHeight,
 				  XDefaultDepth(XtDisplay(toplevel),
 						DefaultScreen(XtDisplay(toplevel))));
 
     XCopyArea(XtDisplay(toplevel), xpmData, xpmDataPadded, gc, 0, 0,
-              attr.width, attr.height, xpadding, ypadding);
+              attr.width, attr.height, xpadding, ypadding);*/
 
     /* set pixmap data */
     XSetWindowBackgroundPixmap(XtDisplay(toplevel),
 			       XtWindow(toplevel),
-			       xpmDataPadded);
+			       xpmData); //padd
     if (appResources.withdrawn) {
 	XSetWindowBackgroundPixmap(XtDisplay(toplevel),
 				   XtWindow(icon),
-				   xpmDataPadded);
+				   xpmData); //padd
     }
 
     /* if pixmap has transparent pixel, set mask pixmap */
     if (xpmMask) {
 	XShapeCombineMask(XtDisplay(toplevel), XtWindow(toplevel),
 			  ShapeBounding, xpadding, ypadding,
-			  xpmMask, ShapeSet);
+			  xpmMask, ShapeSet); 
 	if (appResources.withdrawn) {
 	    XShapeCombineMask(XtDisplay(toplevel), XtWindow(icon),
 			      ShapeBounding, xpadding, ypadding,
