@@ -286,8 +286,6 @@ int main(
 		  XtNgeometry, &geom,
 		  NULL);
     memset(&size_hints, 0, sizeof(XSizeHints));
-    size_hints.width = windowWidth;
-    size_hints.height = windowHeight;
     if (geom) {
 	int x, y;
 	XParseGeometry(geom, &x, &y, &windowWidth, &windowHeight);
@@ -308,6 +306,8 @@ int main(
     }
 
     size_hints.flags |= PMinSize;
+    size_hints.width = windowWidth;
+    size_hints.height = windowHeight;
     size_hints.min_height = BatterySmallHeight;
     size_hints.min_width  = BatterySmallWidth;
 
@@ -357,7 +357,7 @@ int main(
     /* set hint information */
     XSetWMNormalHints(XtDisplay(toplevel), XtWindow(toplevel),
                       &size_hints);
-		      
+ 
     /* display current battery status, and set timer callback */
     updateStatus(NULL, NULL);
 
@@ -422,13 +422,7 @@ struct status getBatteryStatus()
 {
     struct status	ret;
 #ifdef	__FreeBSD__
-/* FreeBSD Code needs to be re-written for ACPI */    
-#ifndef NOAPM
-    
-#else	/* NOAPM */
-    
-#endif	/* NOAPM */
-
+/* FreeBSD Code needs to be re-written for ACPI */ 
 #endif	/* FreeBSD */
 
 #ifdef __NetBSD__
@@ -504,7 +498,6 @@ void updateWindow(struct status s)
 {
     Pixmap	bmp;
     int		ret;
-
     /* free old data */
     if (xpmData) {
 	XFreePixmap(XtDisplay(toplevel), xpmData);
@@ -704,15 +697,14 @@ void updateWindow(struct status s)
               attr.width, attr.height, xpadding, ypadding);
 
     /* set pixmap data */
-    /*XSetWindowBackgroundPixmap(XtDisplay(toplevel),
+    XSetWindowBackgroundPixmap(XtDisplay(toplevel),
 			       XtWindow(toplevel),
 			       xpmDataPadded);
     if (appResources.withdrawn) {
 	XSetWindowBackgroundPixmap(XtDisplay(toplevel),
 				   XtWindow(icon),
 				   xpmDataPadded);
-    }*/
-    XSetWindowBackground(XtDisplay(toplevel), XtWindow(toplevel), 0);
+    }
 
     /* if pixmap has transparent pixel, set mask pixmap */
     if (xpmMask) {
@@ -914,7 +906,6 @@ void CallbackResize(
     windowHeight = xe->xresizerequest.height;
     if(windowWidth != windowHeight){ 
 	    windowWidth = windowHeight = MAX(windowWidth,windowHeight);
-	    fprintf(stderr, "feck off, %d %d\n", xe->xresizerequest.width, xe->xresizerequest.height);
 	    xe->xresizerequest.width = windowWidth;
 	    xe->xresizerequest.height = windowHeight;
 	    XtDispatchEvent(xe);
@@ -938,5 +929,5 @@ void CallbackResize(
     forceRedraw = 1;
     updateStatus(NULL, NULL);
 
-    fprintf(stderr, "<<< Resize, %d %d\n", xe->xresizerequest.width, xe->xresizerequest.height);
+    /*fprintf(stderr, "<<< Resize, %d %d\n", xe->xresizerequest.width, xe->xresizerequest.height); */
 }
