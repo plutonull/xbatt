@@ -65,6 +65,7 @@
 #include <time.h>
 #include <sys/file.h>
 #include <sys/ioctl.h>
+#include <sys/param.h>
 #include <X11/StringDefs.h>
 #include <X11/Intrinsic.h>
 #include <X11/Shell.h>
@@ -277,14 +278,16 @@ int main(
 	    displayType = Mono;
 	}
     }
-
+    
     /* get current property */
     XtVaGetValues(toplevel,
 		  XtNwidth, &windowWidth,
 		  XtNheight, &windowHeight,
 		  XtNgeometry, &geom,
 		  NULL);
-    size_hints.flags = 0;
+    memset(&size_hints, 0, sizeof(XSizeHints));
+    size_hints.width = windowWidth;
+    size_hints.height = windowHeight;
     if (geom) {
 	int x, y;
 	XParseGeometry(geom, &x, &y, &windowWidth, &windowHeight);
@@ -293,6 +296,7 @@ int main(
 	size_hints.y = y;
     }
 
+    if(windowWidth != windowHeight) windowWidth = windowHeight = MAX(windowWidth,windowHeight);
     if (windowWidth < BatteryWidth ||
         windowHeight < BatteryHeight) {
 	appResources.small = TRUE;
@@ -482,53 +486,6 @@ struct status getBatteryStatus()
 		ret.charge = APM_STAT_BATT_LOW;
 	}
     }
-    /* open power status
-    if ((fp = fopen("/proc/apm", "r")) == NULL) {
-	fprintf(stderr, "xbatt: cannot optn /sys/class/power_supply/BAT0/uevent\n");
-	exit(1);
-    }
-
-    ret.charge = APM_STAT_BATT_HIGH;
-    ret.acline = APM_STAT_LINE_OFF;
-    while (fgets(buffer, 64, fp) != NULL) {
-	/*
-	 * for linux-1.3.58 or later
-	 
-	if (sscanf(buffer, "%s %d.%d 0x%x 0x%x 0x%x 0x%x %d%% %d %s\n",
-		driver_version,
-		&apm_bios_info_major,
-		&apm_bios_info_minor,
-		&apm_bios_info_flags,
-		&ac_line_status,
-		&battery_status,
-		&battery_flag,
-		&battLife,
-		&time_units,
-		units) == 10) {
-	    if (battLife < 0) {
-		ret.remain = APM_STAT_UNKNOWN;
-	    } else {
-		ret.remain = battLife;
-	    }
-	    if (ac_line_status == 0x01) {
-		ret.acline = APM_STAT_LINE_ON; 
-	    }
-	    if (battery_status == 0x03) {
-		ret.charge = APM_STAT_BATT_CHARGING;
-	    }
-	}
-	/*
-	 * for apm_bios-0.5
-	 
-	else if (sscanf(buffer, "Battery life: %d%%\n", &battLife) == 1) {
-	    ret.remain = battLife;
-	} else if (strcmp("AC: on line\n", buffer)==0) {
-	    ret.acline = APM_STAT_LINE_ON; 
-	} else if (strcmp("Battery status: charging\n", buffer) == 0) {
-	    ret.charge = APM_STAT_BATT_CHARGING;
-	}
-    }
-    fclose(fp);*/
     fclose(acfp);
 #endif	/* Linux */
 
@@ -569,7 +526,6 @@ void updateWindow(struct status s)
     /* set color symbol for current status */
     setColorSymbol(s.remain, s.acline, s.charge);
 
-    /*removed for no borderlessness*/
     /* set color_class flag */
     if (displayType == Mono) {
 	attr.valuemask |= XpmColorKey;
@@ -622,12 +578,11 @@ void updateWindow(struct status s)
 	break;
     }
 
-    
-    //xpadding = ((windowWidth - attr.width) / 2);
-    //ypadding = ((windowHeight - attr.height) / 2);
+    xpadding = (windowWidth - attr.width) / 2;
+    ypadding = (windowHeight - attr.width) / 2;
 
     /* resize window size to pixmap size */
-    XtResizeWidget(toplevel, attr.width,attr.height, 0);
+    XtResizeWidget(toplevel, windowWidth, windowHeight, 1);
 
     /* if show status is active, then draw status info */
     if ((showStatus != 0) && (s.remain != APM_STAT_UNKNOWN)) {
@@ -740,30 +695,30 @@ void updateWindow(struct status s)
     }
 
     /* make padded pixmap */ 
- /*   xpmDataPadded = XCreatePixmap(XtDisplay(toplevel), XtWindow(toplevel),
+    xpmDataPadded = XCreatePixmap(XtDisplay(toplevel), XtWindow(toplevel),
 				  windowWidth,
 				  windowHeight,
 				  XDefaultDepth(XtDisplay(toplevel),
 						DefaultScreen(XtDisplay(toplevel))));
-
     XCopyArea(XtDisplay(toplevel), xpmData, xpmDataPadded, gc, 0, 0,
-              attr.width, attr.height, xpadding, ypadding);*/
+              attr.width, attr.height, xpadding, ypadding);
 
     /* set pixmap data */
-    XSetWindowBackgroundPixmap(XtDisplay(toplevel),
+    /*XSetWindowBackgroundPixmap(XtDisplay(toplevel),
 			       XtWindow(toplevel),
-			       xpmData); //padd
+			       xpmDataPadded);
     if (appResources.withdrawn) {
 	XSetWindowBackgroundPixmap(XtDisplay(toplevel),
 				   XtWindow(icon),
-				   xpmData); //padd
-    }
+				   xpmDataPadded);
+    }*/
+    XSetWindowBackground(XtDisplay(toplevel), XtWindow(toplevel), 0);
 
     /* if pixmap has transparent pixel, set mask pixmap */
     if (xpmMask) {
 	XShapeCombineMask(XtDisplay(toplevel), XtWindow(toplevel),
 			  ShapeBounding, xpadding, ypadding,
-			  xpmMask, ShapeSet); 
+			  xpmMask, ShapeSet);
 	if (appResources.withdrawn) {
 	    XShapeCombineMask(XtDisplay(toplevel), XtWindow(icon),
 			      ShapeBounding, xpadding, ypadding,
@@ -954,10 +909,17 @@ void CallbackResize(
     if (!XtIsRealized(widget)) {
         return;
     }
-
+    
     windowWidth = xe->xresizerequest.width;
     windowHeight = xe->xresizerequest.height;
-
+    if(windowWidth != windowHeight){ 
+	    windowWidth = windowHeight = MAX(windowWidth,windowHeight);
+	    fprintf(stderr, "feck off, %d %d\n", xe->xresizerequest.width, xe->xresizerequest.height);
+	    xe->xresizerequest.width = windowWidth;
+	    xe->xresizerequest.height = windowHeight;
+	    XtDispatchEvent(xe);
+	    return;
+    }
     if ((windowWidth < BatteryWidth) || (windowHeight < BatteryHeight)) {
 	appResources.small = TRUE;
         if ((windowWidth < BatterySmallWidth)
@@ -976,5 +938,5 @@ void CallbackResize(
     forceRedraw = 1;
     updateStatus(NULL, NULL);
 
-/*    fprintf(stderr, "<<< Resize\n");*/
+    fprintf(stderr, "<<< Resize, %d %d\n", xe->xresizerequest.width, xe->xresizerequest.height);
 }
