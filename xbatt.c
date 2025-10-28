@@ -921,6 +921,10 @@ void CallbackResize(
     } else {
 	appResources.small = FALSE;
     }
+    XtVaSetValues(toplevel,
+		  XtNwidth, windowWidth,
+		  XtNheight, windowHeight,
+		  NULL);
 
     /* reset status flag */
     showStatus = 0;
