@@ -457,7 +457,7 @@ struct status getBatteryStatus()
     	fprintf(stderr, "xbatt: cannot open /sys/class/power_supply/BAT0/capacity");
     	exit(1);
     }
-    while((fgets(buffer,4,fp)) != NULL){
+    while((fgets(buffer,5,fp)) != NULL){
     	battLife=atoi(buffer);
 	if(battLife < 0){
 		ret.remain = APM_STAT_UNKNOWN;
