@@ -216,8 +216,8 @@ struct Digits	digits[] = {
 };
 
  String fallback_resouces[] = {
-    "*width: 39",
-    "*height: 39",
+    "*width: 80",
+    "*height: 80",
     NULL
 };
 
@@ -435,6 +435,8 @@ struct status getBatteryStatus()
     FILE*       acfp;
     FILE*	fp;
     int		battLife;
+    char 	c;
+    int 	i = 0;
 
     /* set fallbacks */
     ret.charge = APM_STAT_BATT_HIGH;
@@ -455,7 +457,7 @@ struct status getBatteryStatus()
     	fprintf(stderr, "xbatt: cannot open /sys/class/power_supply/BAT0/capacity");
     	exit(1);
     }
-    while((fgets(buffer,5,fp)) != NULL){
+    while((fgets(buffer,4,fp)) != NULL){
     	battLife=atoi(buffer);
 	if(battLife < 0){
 		ret.remain = APM_STAT_UNKNOWN;
@@ -469,17 +471,21 @@ struct status getBatteryStatus()
     	fprintf(stderr, "xbatt: cannot open /sys/class/power_supply/BAT0/status");
     	exit(1);
     }
-    while((fgets(buffer,15,fp)) != NULL){
-	if(strcmp(buffer, "Charging") == 0){
-		ret.charge = APM_STAT_BATT_CHARGING;
-	} else if (battLife > BATT_HIGH){
-		ret.charge = APM_STAT_BATT_HIGH;
-	} else if (battLife < BATT_CRITICAL) {
-		ret.charge = APM_STAT_BATT_CRITICAL;
-	} else {
-		ret.charge = APM_STAT_BATT_LOW;
-	}
+    memset(buffer,64,0);
+    while((c = fgetc(fp)) != '\n'){
+	buffer[i++]=c;
     }
+    buffer[i]='\0';
+    if(strcmp(buffer, "Charging") == 0){
+	ret.charge = APM_STAT_BATT_CHARGING;
+    } else if (battLife > BATT_HIGH){
+	ret.charge = APM_STAT_BATT_HIGH;
+    } else if (battLife < BATT_CRITICAL) {
+	ret.charge = APM_STAT_BATT_CRITICAL;
+    } else {
+	ret.charge = APM_STAT_BATT_LOW;
+    }
+    
     fclose(acfp);
 #endif	/* Linux */
 

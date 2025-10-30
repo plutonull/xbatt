@@ -10,8 +10,8 @@ Note: this program currently does not work on FreeBSD
 1. WHAT IS XBATT? 
 
   xbatt is an X11 client which displays the battery status of your
-notebook computer equiped with APM (Advanced Power Management) BIOS.
-It works for both FreeBSD and Linux.  The status displayed consists of
+notebook computer equiped with ACPI.
+It currently works only on Linux.  The status displayed consists of
 the remaining battery life, the AC line status, and the charging
 status.
 
@@ -19,6 +19,7 @@ status.
 
   xbatt acquires the battery status via the ACPI driver.
   The ACPI driver should be already configured on your Linux system, if it is not, you will have to load the correct driver module, consult your distribution's documentation for more information.
+  If xbatt issues errors about not being able to open files, your ACPI driver may be using different names for the kernel interface under /sys/class/power_supply/. If it is, replace the directory names on lines 445 457 and 470 in xbatt.c with the ones your system uses.
 
 3. INSTALLATION
 
@@ -84,7 +85,7 @@ following people:
 
 6. QUESTIONS?  
 
-  Comments, bug-reports, and patches are welcome. The original author can be reached at eto@forus.or.jp or eto@osl.fujitsu.co.jp, however questions regarding the ACPI interface should not be directed to them.
+  Comments, bug-reports, and patches are welcome. The original author can be reached at eto@forus.or.jp or eto@osl.fujitsu.co.jp, however questions regarding the ACPI interface should not be directed to them, and should instead be directed to github.com/plutonull/xbatt/issues.
 
 
 <END-OF-FILE>
