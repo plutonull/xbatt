@@ -432,7 +432,6 @@ struct status getBatteryStatus()
 #ifdef	linux
     char	buffer[64];
     char	acstat;
-    FILE*       acfp;
     FILE*	fp;
     int		battLife;
     char 	c;
@@ -442,19 +441,20 @@ struct status getBatteryStatus()
     ret.charge = APM_STAT_BATT_HIGH;
     ret.acline = APM_STAT_LINE_OFF;
     /* open AC line status */
-    if ((acfp = fopen("/sys/class/power_supply/AC/online", "r")) == NULL){
-    	fprintf(stderr, "xbatt: cannot open /sys/class/power_supply/AC/online\n");
+    if ((fp = fopen(ACLINE_PATH, "r")) == NULL){
+    	fprintf(stderr, "xbatt: cannot open %s\n", ACLINE_PATH);
 	exit(1);
     }
-    while ((acstat=fgetc(acfp))!=EOF){
+    while ((acstat=fgetc(fp))!=EOF){
     	if(acstat=='1'){
 		ret.acline = APM_STAT_LINE_ON;
 	}
 
     }
+    fclose(fp);
 
-    if((fp = fopen("/sys/class/power_supply/BAT0/capacity", "r")) == NULL){
-    	fprintf(stderr, "xbatt: cannot open /sys/class/power_supply/BAT0/capacity");
+    if((fp = fopen(BATTERY_CAPACITY_PATH, "r")) == NULL){
+    	fprintf(stderr, "xbatt: cannot open %s\n", BATTERY_CAPACITY_PATH);
     	exit(1);
     }
     while((fgets(buffer,5,fp)) != NULL){
@@ -467,11 +467,11 @@ struct status getBatteryStatus()
     }
     fclose(fp);
      
-    if((fp = fopen("/sys/class/power_supply/BAT0/status", "r")) == NULL){
-    	fprintf(stderr, "xbatt: cannot open /sys/class/power_supply/BAT0/status");
+    if((fp = fopen(BATTERY_STATUS_PATH, "r")) == NULL){
+    	fprintf(stderr, "xbatt: cannot open %s\n", BATTERY_STATUS_PATH);
     	exit(1);
     }
-    memset(buffer,64,0);
+
     while((c = fgetc(fp)) != '\n'){
 	buffer[i++]=c;
     }
@@ -486,7 +486,7 @@ struct status getBatteryStatus()
 	ret.charge = APM_STAT_BATT_LOW;
     }
     
-    fclose(acfp);
+    fclose(fp);
 #endif	/* Linux */
 
     return ret;

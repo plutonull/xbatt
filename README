@@ -19,8 +19,7 @@ status.
 
   xbatt acquires the battery status via the ACPI driver.
   The ACPI driver should be already configured on your Linux system, if it is not, you will have to load the correct driver module, consult your distribution's documentation for more information.
-  If xbatt issues errors about not being able to open files, your ACPI driver may be using different names for the kernel interface under /sys/class/power_supply/. If it is, replace the directory names on lines 445 457 and 470 in xbatt.c with the ones your system uses.
-
+  If xbatt issues errors about not being able to open files, your ACPI driver may be using different names for the kernel interface directories under /sys/class/power_supply/. If it is, replace the ACLINE and BATTERY environment variables in the Imakefile
 3. INSTALLATION
 
   To build xbatt, you will need the XPM library (libXpm), which is

@@ -1,6 +1,11 @@
 VERSION = 1.3
 
-DEFINES = -DUPDATE_INTERVAL=30
+ACLINE=/sys/class/power_supply/AC/online
+BATTERY=/sys/class/power_supply/BAT0/
+
+DEFINES = -DUPDATE_INTERVAL=30 -DACLINE_PATH=\"$(ACLINE)\" -DBATTERY_STATUS_PATH=\"$(BATTERY)/status\" -DBATTERY_CAPACITY_PATH=\"$(BATTERY)/capacity\"
+
+
 
 LOCAL_LIBRARIES = $(XAWLIB) $(XMULIB) $(XTOOLLIB) -lXpm $(XLIB)
 SRCS = xbatt.c
