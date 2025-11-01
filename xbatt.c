@@ -285,7 +285,7 @@ int main(
 		  XtNheight, &windowHeight,
 		  XtNgeometry, &geom,
 		  NULL);
-    memset(&size_hints, 0, sizeof(XSizeHints));
+
     if (geom) {
 	int x, y;
 	XParseGeometry(geom, &x, &y, &windowWidth, &windowHeight);
